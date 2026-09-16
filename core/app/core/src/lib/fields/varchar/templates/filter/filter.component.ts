@@ -73,6 +73,7 @@ export class VarcharFilterFieldComponent extends BaseFieldComponent implements O
     }
 
     protected setFieldValue(newValue): void {
+        console.trace('setFieldValue', newValue, typeof newValue);
         this.field.value = newValue;
         this.field.criteria.operator = '=';
         this.field.criteria.values = [newValue];

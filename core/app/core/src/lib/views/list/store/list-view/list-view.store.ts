@@ -60,6 +60,7 @@ import {RecordPanelMetadata} from '../../../../containers/record-panel/store/rec
 import {UserPreferenceStore} from '../../../../store/user-preference/user-preference.store';
 import {ListViewUrlQueryService} from '../../services/list-view-url-query.service';
 import {SystemConfigStore} from "../../../../store/system-config/system-config.store";
+import {DataTypeFormatter} from '../../../../services/formatters/data-type.formatter.service';
 
 export interface ListViewData {
     records: Record[];
@@ -175,7 +176,8 @@ export class ListViewStore extends ViewStore implements StateStore {
         protected listViewUrlQueryService: ListViewUrlQueryService,
         protected localStorageService: LocalStorageService,
         protected systemConfigsStore: SystemConfigStore,
-        protected userPreferences: UserPreferenceStore
+        protected userPreferences: UserPreferenceStore,
+        protected typeFormatter: DataTypeFormatter
     ) {
 
         super(appStateStore, languageStore, navigationStore, moduleNavigation, metadataStore);
@@ -443,12 +445,36 @@ export class ListViewStore extends ViewStore implements StateStore {
      * @param {boolean} reload flag
      * @param sort
      */
-    public setFilters(filters: SavedFilterMap, reload = true, sort: SortingSelection = null): void {
+    public setFilters(filters: SavedFilterMap, reload = true, sort: SortingSelection = null, convert = true): void {
 
-        const filterKey = Object.keys(filters).shift();
-        const filter = filters[filterKey];
+        const activeFilters = deepClone(filters);
+        const filterKey = Object.keys(activeFilters).shift();
+        const filter = activeFilters[filterKey];
 
-        this.updateState({...this.internalState, activeFilters: deepClone(filters), openFilter: deepClone(filter)});
+        if (convert) {
+            Object.keys(filter?.criteria?.filters ?? {}).forEach(criteriaKey => {
+                const criterion = filter.criteria.filters[criteriaKey];
+                if (criterion?.fieldType && criterion.rangeSearch) {
+
+                    if (criterion.target) {
+                        criterion.target = this.typeFormatter.toInternalFormat(criterion.fieldType, criterion.target);
+                    }
+                    if (criterion.start) {
+                        criterion.start = this.typeFormatter.toInternalFormat(criterion.fieldType, criterion.start);
+                    }
+                    if (criterion.end) {
+                        criterion.end = this.typeFormatter.toInternalFormat(criterion.fieldType, criterion.end);
+                    }
+
+                }
+                if (criterion?.fieldType && Array.isArray(criterion.values)) {
+                    criterion.values = criterion.values.map(value => this.typeFormatter.toInternalFormat(criterion.fieldType, value));
+                }
+
+            });
+        }
+
+        this.updateState({...this.internalState, activeFilters, openFilter: deepClone(filter)});
 
         if (filter.criteria) {
             let orderBy = filter.criteria.orderBy ?? '';
@@ -808,7 +834,7 @@ export class ListViewStore extends ViewStore implements StateStore {
             currentSort = null;
         }
 
-        this.setFilters(activeFiltersPref, false, currentSort);
+        this.setFilters(activeFiltersPref, false, currentSort, false);
     }
 
     /**

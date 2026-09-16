@@ -43,8 +43,8 @@ export class NumberFormatter implements Formatter {
     ) {
     }
 
-    toUserFormat(value: string,  options?: FormatOptions): string {
-
+    toUserFormat(value: string, options?: FormatOptions): string {
+        console.trace('toUserFormat', value, typeof value);
         if (isVoid(value) || value === '') {
             return '';
         }
@@ -57,7 +57,7 @@ export class NumberFormatter implements Formatter {
         return this.replaceSeparators(formatted);
     }
 
-    toInternalFormat(value: string): string {
+    toInternalFormat(value: string, options?: FormatOptions): string {
 
         if (!value) {
             return value;
@@ -65,6 +65,9 @@ export class NumberFormatter implements Formatter {
 
         const decimalSymbol = this.getDecimalsSymbol() || '.';
         const groupSymbol = this.getGroupSymbol() || ',';
+         if (options && options.isUserSuppliedValue === true) {
+            return value;
+        }
 
         let decimalSymbolRegex = new RegExp(decimalSymbol, 'g');
         if (decimalSymbol === '.') {
@@ -80,7 +83,6 @@ export class NumberFormatter implements Formatter {
 
         value = value.toString().replace(groupSymbolRegex, 'group_separator');
         value = value.toString().replace(decimalSymbolRegex, 'decimal_separator');
-
 
         value = value.toString().replace(/decimal_separator/g, '.');
         value = value.toString().replace(/group_separator/g, '');

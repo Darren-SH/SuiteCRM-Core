@@ -372,8 +372,10 @@ export class BaseFieldComponent implements FieldComponentInterface, OnInit, OnDe
     }
 
     protected toInternalFormat(fieldType, value): string {
-        return this.typeFormatter.toInternalFormat(fieldType, value);
+        const currentMode = this.mode || '';
 
+        const isUserSuppliedValue = (currentMode === 'search' || currentMode === 'edit' || currentMode === 'filter');
+        return this.typeFormatter.toInternalFormat(fieldType, value, { isUserSuppliedValue: isUserSuppliedValue });
     }
 
     protected setFieldValue(newValue): void {

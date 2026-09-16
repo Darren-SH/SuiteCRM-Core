@@ -52,6 +52,7 @@ export class DataTypeFormatter {
     ) {
         this.map.int = numberFormatter;
         this.map.float = numberFormatter;
+        this.map.decimal = numberFormatter;
         this.map.date = dateFormatter;
         this.map.datetime = datetimeFormatter;
         this.map.currency = currencyFormatter;
@@ -72,7 +73,7 @@ export class DataTypeFormatter {
         return formatter.toUserFormat(value, options);
     }
 
-    toInternalFormat(dataType: string, value: string): string {
+    toInternalFormat(dataType: string, value: string, options?: FormatOptions): string {
 
         if (!dataType) {
             return value;
@@ -83,6 +84,6 @@ export class DataTypeFormatter {
             return value;
         }
 
-        return formatter.toInternalFormat(value);
+        return formatter.toInternalFormat(value, options);
     }
 }
